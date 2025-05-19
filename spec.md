@@ -112,6 +112,7 @@ This document outlines the plan for developing a browser-based chess game. The i
     - **Choice:** Emotion.js (a performant and flexible CSS-in-JS library, similar to Styled Components).
     - _Reasoning:_ Excellent for component-scoped styles, dynamic styling based on props/state (crucial for game interactions like highlighting squares or pieces), theming capabilities, and allows leveraging JavaScript for styling logic.
     - Define styles for the board, squares, pieces, and overall layout directly within their respective components.
+    - **Pseudo-3D/2.5D Effects:** Employ CSS techniques like `box-shadow`, `transform` (perspective, rotateX/Y), gradients, and pseudo-elements to create an illusion of depth for the board and pieces, enhancing visual appeal without full 3D rendering.
     - Ensure responsive design for different screen sizes (basic consideration for V1).
 
 ## 8. Development Phases (Suggested)
