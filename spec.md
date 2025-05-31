@@ -117,24 +117,87 @@ This document outlines the plan for developing a browser-based chess game. The i
 
 ## 8. Development Phases (Suggested)
 
-1.  **Phase 1: Core Setup & Board Rendering**
-    - Project setup.
-    - Static board rendering with pieces from an initial FEN.
-    - Basic styling for board and pieces.
-2.  **Phase 2: Player Movement & Game Logic**
-    - Implement player move input (click-click or drag-and-drop).
-    - Integrate `chess.js` for move validation and game state updates.
-    - Display game status (check, turn).
-3.  **Phase 3: Basic AI**
-    - Implement random or very simple AI opponent.
-    - AI makes moves automatically.
-    - Implement checkmate/stalemate detection and display.
-4.  **Phase 4: Animations & Polish**
-    - Add piece movement animations with Framer Motion.
-    - Refine UI/UX (e.g., highlighting legal moves).
-    - Improve styling.
+### ✅ Phase 1: Core Setup & Board Rendering (COMPLETED)
 
-## 9. Future Enhancements (Post-Initial Version)
+- ✅ Project setup with Vite + React + TypeScript
+- ✅ Dependencies installed: chess.js, @emotion/react, @emotion/styled
+- ✅ Static 8x8 board rendering with proper chess colors
+- ✅ chess.js integration for initial board state
+- ✅ Unicode chess pieces display
+- ✅ Basic Emotion/styled-components styling
+
+### ✅ Phase 2: Player Movement & Game Logic (COMPLETED)
+
+- ✅ Piece selection with click handling
+- ✅ Visual feedback (yellow highlight for selected pieces)
+- ✅ Legal move calculation and highlighting (green squares with circular indicators)
+- ✅ Move execution with proper validation
+- ✅ Turn management between white/black
+
+### ✅ Phase 3: Game Status Display (COMPLETED)
+
+- ✅ GameInfo component showing current turn
+- ✅ Game status detection (check, checkmate, stalemate, draw)
+- ✅ Reset game functionality
+- ✅ Mode switching between "vs AI" and "Player vs Player"
+
+### ✅ Phase 4: Basic AI Opponent (COMPLETED)
+
+- ✅ AI logic module with random and "easy" (capture-preferring) strategies
+- ✅ Automatic AI moves when it's black's turn in AI mode
+- ✅ Proper turn restrictions (human can only move when it's their turn)
+- ✅ 500ms thinking delay for better UX
+- ✅ AI-specific status messages
+
+### ✅ Phase 5: Pawn Promotion (COMPLETED)
+
+- ✅ Pawn promotion detection using chess.js move flags
+- ✅ Modal promotion dialog with piece selection (Queen, Rook, Bishop, Knight)
+- ✅ Proper promotion handling for both human and AI players
+- ✅ AI automatically promotes to Queen for optimal play
+
+### 🔄 Phase 6: Animations & Polish (PENDING)
+
+- 🔄 Add piece movement animations with Framer Motion
+- 🔄 Refine UI/UX styling and visual effects
+- 🔄 Enhanced board and piece styling
+
+## 9. Current Implementation Status
+
+### Completed Features ✅
+
+- **Full Chess Game Logic**: Complete implementation using chess.js with proper move validation, check detection, and game-over conditions
+- **Interactive Board**: 8x8 grid with click-to-select and click-to-move functionality
+- **Visual Feedback**: Selected pieces highlighted in yellow, legal moves shown with green circular indicators
+- **AI Opponent**: Two difficulty levels (random and easy/capture-preferring) with automatic move execution
+- **Game Modes**: Toggle between Player vs Player and Player vs AI
+- **Pawn Promotion**: Complete implementation with modal dialog for piece selection
+- **Game Status Display**: Real-time updates showing turn, check status, game outcome
+- **Responsive Design**: Clean styling with Emotion/styled-components
+
+### Technical Implementation
+
+- **Frontend**: React 18 + TypeScript + Vite
+- **Chess Logic**: chess.js library for robust rule validation
+- **Styling**: Emotion/styled-components for component-scoped CSS
+- **State Management**: React hooks (useState, useEffect) for game state
+- **AI Architecture**: Modular ChessAI class with pluggable strategies
+
+### File Structure
+
+```
+src/
+├── components/
+│   ├── Board/Board.tsx          # Main game logic and board rendering
+│   ├── Square/Square.tsx        # Individual square with piece display
+│   ├── Piece/Piece.tsx         # Unicode piece rendering
+│   ├── GameInfo/GameInfo.tsx   # Game status and controls
+│   └── PromotionDialog/PromotionDialog.tsx # Pawn promotion modal
+└── logic/
+    └── ai.ts                   # AI implementation with multiple strategies
+```
+
+## 10. Future Enhancements (Post-Initial Version)
 
 - More sophisticated AI (Minimax with Alpha-Beta Pruning, iterative deepening).
 - Integration with a WebAssembly chess engine (e.g., Stockfish.js).
