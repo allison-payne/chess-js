@@ -5,8 +5,16 @@ import { Chess } from 'chess.js'; // Import Chess
 import Square from '../Square/Square';
 import GameInfo from '../GameInfo/GameInfo';
 import PromotionDialog from '../PromotionDialog/PromotionDialog';
+import MoveHistory from '../MoveHistory/MoveHistory';
 import ChessAI from '../../logic/ai';
 import type { PieceSymbol, PieceColor } from '../Piece/Piece'; // Import types for piece data
+
+interface MoveHistoryEntry {
+  san: string;
+  moveNumber: number;
+  color: 'w' | 'b';
+  fen: string;
+}
 
 // Enhanced styled component for the board container with animations
 const BoardContainer = styled(motion.div)`
@@ -23,15 +31,23 @@ const BoardContainer = styled(motion.div)`
 
 const GameContainer = styled(motion.div)`
   display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 20px;
+`;
+
+const LeftPanel = styled.div`
+  display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px;
-  padding: 20px;
 `;
 
 const Board: React.FC = () => {
   // Initialize chess.js game instance
   const [game, setGame] = useState(() => new Chess());
+  const [gameUpdateTrigger, setGameUpdateTrigger] = useState(0); // Force re-renders
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [legalMoves, setLegalMoves] = useState<string[]>([]);
   const [gameMode, setGameMode] = useState<'pvp' | 'ai'>('ai'); // Default to AI mode
@@ -39,6 +55,11 @@ const Board: React.FC = () => {
   const [isAIThinking, setIsAIThinking] = useState(false);
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null);
   const [isGameShaking, setIsGameShaking] = useState(false);
+  
+  // Move history and navigation state
+  const [moveHistory, setMoveHistory] = useState<MoveHistoryEntry[]>([]);
+  const [currentMoveIndex, setCurrentMoveIndex] = useState(-1); // -1 means current position
+  const [displayGame, setDisplayGame] = useState(() => new Chess()); // Game state for display
   
   // Promotion state
   const [pendingPromotion, setPendingPromotion] = useState<{
@@ -55,9 +76,86 @@ const Board: React.FC = () => {
     }
   }, [game]);
 
+  // Update move history when game changes
+  const updateMoveHistory = useCallback((gameInstance: Chess) => {
+    const history = gameInstance.history({ verbose: true });
+    const newMoveHistory: MoveHistoryEntry[] = [];
+    
+    // Reconstruct the game to get FEN positions for each move
+    const tempGame = new Chess();
+    
+    for (let i = 0; i < history.length; i++) {
+      const move = history[i];
+      tempGame.move(move);
+      
+      newMoveHistory.push({
+        san: move.san,
+        moveNumber: Math.floor(i / 2) + 1,
+        color: move.color,
+        fen: tempGame.fen(),
+      });
+    }
+    
+    setMoveHistory(newMoveHistory);
+    setCurrentMoveIndex(-1); // Reset to current position
+    setDisplayGame(new Chess(gameInstance.fen())); // Update display game
+  }, []);
+
+  // Navigate to specific move
+  const handleMoveClick = useCallback((moveIndex: number) => {
+    if (moveIndex < 0 || moveIndex >= moveHistory.length) return;
+    
+    setCurrentMoveIndex(moveIndex);
+    const targetFen = moveHistory[moveIndex].fen;
+    setDisplayGame(new Chess(targetFen));
+    
+    // Clear selection when navigating
+    setSelectedSquare(null);
+    setLegalMoves([]);
+  }, [moveHistory]);
+
+  // Navigate with buttons
+  const handleNavigate = useCallback((direction: 'first' | 'prev' | 'next' | 'last') => {
+    const maxIndex = moveHistory.length - 1;
+    
+    switch (direction) {
+      case 'first':
+        if (moveHistory.length > 0) {
+          handleMoveClick(0);
+        }
+        break;
+      case 'prev':
+        if (currentMoveIndex > 0) {
+          handleMoveClick(currentMoveIndex - 1);
+        } else if (currentMoveIndex === -1 && moveHistory.length > 0) {
+          handleMoveClick(maxIndex - 1);
+        }
+        break;
+      case 'next':
+        if (currentMoveIndex < maxIndex) {
+          handleMoveClick(currentMoveIndex + 1);
+        } else if (currentMoveIndex === maxIndex) {
+          setCurrentMoveIndex(-1);
+          setDisplayGame(new Chess(game.fen()));
+          setSelectedSquare(null);
+          setLegalMoves([]);
+        }
+        break;
+      case 'last':
+        setCurrentMoveIndex(-1);
+        setDisplayGame(new Chess(game.fen()));
+        setSelectedSquare(null);
+        setLegalMoves([]);
+        break;
+    }
+  }, [currentMoveIndex, moveHistory, game, handleMoveClick]);
+
+  // Check if we're viewing current position
+  const isViewingCurrentPosition = currentMoveIndex === -1;
+
   // AI move effect - triggers when it's AI's turn (black)
   useEffect(() => {
-    if (gameMode === 'ai' && game.turn() === 'b' && !game.isGameOver() && !isAIThinking) {
+    if (gameMode === 'ai' && game.turn() === 'b' && !game.isGameOver() && !isAIThinking && isViewingCurrentPosition) {
       setIsAIThinking(true);
       
       // Add a small delay to make AI moves visible 
@@ -68,8 +166,11 @@ const Board: React.FC = () => {
           // Update last move for highlighting
           setLastMove({ from: aiMove.from, to: aiMove.to });
           
-          // Update game state with AI move
-          setGame(new Chess(game.fen()));
+          // Force re-render
+          setGameUpdateTrigger(prev => prev + 1);
+          
+          // Update move history after the move was made
+          updateMoveHistory(game);
           
           // Trigger check animation if needed
           setTimeout(() => triggerCheckAnimation(), 100);
@@ -77,17 +178,21 @@ const Board: React.FC = () => {
         setIsAIThinking(false);
       }, 500); // 500ms delay for better UX
     }
-  }, [game, gameMode, ai, isAIThinking, triggerCheckAnimation]);
+  }, [game, gameUpdateTrigger, gameMode, ai, isAIThinking, triggerCheckAnimation, isViewingCurrentPosition, updateMoveHistory]);
 
   // Reset game function
   const resetGame = () => {
     const newGame = new Chess();
     setGame(newGame);
+    setGameUpdateTrigger(0);
     setSelectedSquare(null);
     setLegalMoves([]);
     setIsAIThinking(false);
     setPendingPromotion(null);
     setLastMove(null);
+    setMoveHistory([]);
+    setCurrentMoveIndex(-1);
+    setDisplayGame(new Chess());
   };
 
   // Handle promotion selection
@@ -105,9 +210,14 @@ const Board: React.FC = () => {
         // Update last move for highlighting
         setLastMove({ from: pendingPromotion.from, to: pendingPromotion.to });
         
-        setGame(new Chess(game.fen()));
         setSelectedSquare(null);
         setLegalMoves([]);
+        
+        // Force re-render
+        setGameUpdateTrigger(prev => prev + 1);
+        
+        // Update move history
+        updateMoveHistory(game);
         
         // Trigger check animation if needed
         setTimeout(() => triggerCheckAnimation(), 100);
@@ -142,8 +252,8 @@ const Board: React.FC = () => {
 
   // Handle square click for piece selection
   const handleSquareClick = (row: number, col: number) => {
-    // Don't allow moves if game is over or AI is thinking
-    if (game.isGameOver() || isAIThinking) {
+    // Don't allow moves if game is over, AI is thinking, or not viewing current position
+    if (game.isGameOver() || isAIThinking || !isViewingCurrentPosition) {
       return;
     }
 
@@ -201,9 +311,14 @@ const Board: React.FC = () => {
                 setLastMove({ from: selectedSquare, to: square });
                 
                 // Move was successful, update the game state
-                setGame(new Chess(game.fen())); // Create new instance to trigger re-render
                 setSelectedSquare(null);
                 setLegalMoves([]);
+                
+                // Force re-render
+                setGameUpdateTrigger(prev => prev + 1);
+                
+                // Update move history
+                updateMoveHistory(game);
                 
                 // Trigger check animation if needed
                 setTimeout(() => triggerCheckAnimation(), 100);
@@ -236,7 +351,7 @@ const Board: React.FC = () => {
 
   const renderSquares = () => {
     const squares = [];
-    const boardState = game.board(); // Get the board state from chess.js
+    const boardState = displayGame.board(); // Use displayGame for board state
 
     for (let row = 0; row < 8; row++) {
       for (let col = 0; col < 8; col++) {
@@ -245,8 +360,8 @@ const Board: React.FC = () => {
         const isEven = (row + col) % 2 === 0;
         const squareKey = `square-${row}-${col}`;
         const squareNotation = String.fromCharCode(97 + col) + (8 - row); // Convert to chess notation
-        const isSelected = selectedSquare === squareNotation;
-        const isLegalMove = legalMoves.includes(squareNotation);
+        const isSelected = selectedSquare === squareNotation && isViewingCurrentPosition; // Only show selection on current position
+        const isLegalMove = legalMoves.includes(squareNotation) && isViewingCurrentPosition; // Only show legal moves on current position
         const isLastMove = !!(lastMove && (lastMove.from === squareNotation || lastMove.to === squareNotation));
 
         squares.push(
@@ -271,21 +386,33 @@ const Board: React.FC = () => {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <GameInfo 
-        game={game} 
-        gameMode={gameMode}
-        isAIThinking={isAIThinking}
-        onResetGame={resetGame} 
-        onToggleGameMode={toggleGameMode}
+      <LeftPanel>
+        <GameInfo 
+          game={game} 
+          gameMode={gameMode}
+          isAIThinking={isAIThinking}
+          onResetGame={resetGame} 
+          onToggleGameMode={toggleGameMode}
+        />
+        <BoardContainer
+          animate={isGameShaking ? { x: [0, -5, 5, -5, 5, 0] } : { x: 0 }}
+          transition={{ duration: 0.6 }}
+          initial={{ rotateX: 45, opacity: 0 }}
+          whileInView={{ rotateX: 0, opacity: 1 }}
+        >
+          {renderSquares()}
+        </BoardContainer>
+      </LeftPanel>
+      
+      <MoveHistory
+        moves={moveHistory}
+        currentMoveIndex={currentMoveIndex}
+        onMoveClick={handleMoveClick}
+        onNavigate={handleNavigate}
+        canNavigateBack={currentMoveIndex > 0 || (currentMoveIndex === -1 && moveHistory.length > 0)}
+        canNavigateForward={currentMoveIndex < moveHistory.length - 1 || currentMoveIndex === -1}
       />
-      <BoardContainer
-        animate={isGameShaking ? { x: [0, -5, 5, -5, 5, 0] } : { x: 0 }}
-        transition={{ duration: 0.6 }}
-        initial={{ rotateX: 45, opacity: 0 }}
-        whileInView={{ rotateX: 0, opacity: 1 }}
-      >
-        {renderSquares()}
-      </BoardContainer>
+      
       <AnimatePresence>
         {pendingPromotion && (
           <PromotionDialog
