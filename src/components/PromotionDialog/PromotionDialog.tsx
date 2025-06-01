@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from '@emotion/styled';
+import { motion } from 'framer-motion';
 import Piece from '../Piece/Piece';
 import type { PieceSymbol, PieceColor } from '../Piece/Piece';
 
@@ -9,7 +10,7 @@ interface PromotionDialogProps {
   onCancel: () => void;
 }
 
-const DialogOverlay = styled.div`
+const DialogOverlay = styled(motion.div)`
   position: fixed;
   top: 0;
   left: 0;
@@ -22,7 +23,7 @@ const DialogOverlay = styled.div`
   z-index: 1000;
 `;
 
-const DialogContainer = styled.div`
+const DialogContainer = styled(motion.div)`
   background-color: white;
   border-radius: 8px;
   padding: 20px;
@@ -75,18 +76,38 @@ const PromotionDialog: React.FC<PromotionDialogProps> = ({ color, onPromotion, o
   const promotionPieces: PieceSymbol[] = ['q', 'r', 'b', 'n'];
 
   return (
-    <DialogOverlay>
-      <DialogContainer>
+    <DialogOverlay
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <DialogContainer
+        initial={{ scale: 0.5, opacity: 0, y: -50 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.5, opacity: 0, y: -50 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+      >
         <DialogTitle>Choose Promotion Piece</DialogTitle>
         <PieceOptions>
-          {promotionPieces.map((pieceType) => (
-            <PieceButton
+          {promotionPieces.map((pieceType, index) => (
+            <motion.div
               key={pieceType}
-              onClick={() => onPromotion(pieceType)}
-              title={getPieceName(pieceType)}
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ 
+                delay: index * 0.1,
+                duration: 0.3,
+                ease: "easeOut"
+              }}
             >
-              <Piece type={pieceType} color={color} />
-            </PieceButton>
+              <PieceButton
+                onClick={() => onPromotion(pieceType)}
+                title={getPieceName(pieceType)}
+              >
+                <Piece type={pieceType} color={color} />
+              </PieceButton>
+            </motion.div>
           ))}
         </PieceOptions>
         <CancelButton onClick={onCancel}>Cancel</CancelButton>

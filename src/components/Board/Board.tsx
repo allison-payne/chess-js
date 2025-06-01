@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled from '@emotion/styled';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Chess } from 'chess.js'; // Import Chess
 import Square from '../Square/Square';
 import GameInfo from '../GameInfo/GameInfo';
@@ -7,14 +8,25 @@ import PromotionDialog from '../PromotionDialog/PromotionDialog';
 import ChessAI from '../../logic/ai';
 import type { PieceSymbol, PieceColor } from '../Piece/Piece'; // Import types for piece data
 
-// Basic styled component for the board container
-const BoardContainer = styled.div`
+// Enhanced styled component for the board container with animations
+const BoardContainer = styled(motion.div)`
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
   width: 400px; // Example size, can be adjusted
   height: 400px; // Example size, can be adjusted
   border: 2px solid #333;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+`;
+
+const GameContainer = styled(motion.div)`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
 `;
 
 const Board: React.FC = () => {
@@ -25,6 +37,8 @@ const Board: React.FC = () => {
   const [gameMode, setGameMode] = useState<'pvp' | 'ai'>('ai'); // Default to AI mode
   const [ai] = useState(() => new ChessAI('random'));
   const [isAIThinking, setIsAIThinking] = useState(false);
+  const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null);
+  const [isGameShaking, setIsGameShaking] = useState(false);
   
   // Promotion state
   const [pendingPromotion, setPendingPromotion] = useState<{
@@ -32,6 +46,14 @@ const Board: React.FC = () => {
     to: string;
     color: PieceColor;
   } | null>(null);
+
+  // Trigger check animation
+  const triggerCheckAnimation = useCallback(() => {
+    if (game.isCheck()) {
+      setIsGameShaking(true);
+      setTimeout(() => setIsGameShaking(false), 600);
+    }
+  }, [game]);
 
   // AI move effect - triggers when it's AI's turn (black)
   useEffect(() => {
@@ -43,13 +65,19 @@ const Board: React.FC = () => {
         console.log("AI is thinking...");
         const aiMove = ai.makeMove(game);
         if (aiMove) {
+          // Update last move for highlighting
+          setLastMove({ from: aiMove.from, to: aiMove.to });
+          
           // Update game state with AI move
           setGame(new Chess(game.fen()));
+          
+          // Trigger check animation if needed
+          setTimeout(() => triggerCheckAnimation(), 100);
         }
         setIsAIThinking(false);
       }, 500); // 500ms delay for better UX
     }
-  }, [game, gameMode, ai, isAIThinking]);
+  }, [game, gameMode, ai, isAIThinking, triggerCheckAnimation]);
 
   // Reset game function
   const resetGame = () => {
@@ -59,6 +87,7 @@ const Board: React.FC = () => {
     setLegalMoves([]);
     setIsAIThinking(false);
     setPendingPromotion(null);
+    setLastMove(null);
   };
 
   // Handle promotion selection
@@ -73,9 +102,15 @@ const Board: React.FC = () => {
       });
       
       if (move) {
+        // Update last move for highlighting
+        setLastMove({ from: pendingPromotion.from, to: pendingPromotion.to });
+        
         setGame(new Chess(game.fen()));
         setSelectedSquare(null);
         setLegalMoves([]);
+        
+        // Trigger check animation if needed
+        setTimeout(() => triggerCheckAnimation(), 100);
       }
     } catch (error) {
       console.error('Promotion move failed:', error);
@@ -162,10 +197,16 @@ const Board: React.FC = () => {
             try {
               const move = game.move({ from: selectedSquare, to: square });
               if (move) {
+                // Update last move for highlighting
+                setLastMove({ from: selectedSquare, to: square });
+                
                 // Move was successful, update the game state
                 setGame(new Chess(game.fen())); // Create new instance to trigger re-render
                 setSelectedSquare(null);
                 setLegalMoves([]);
+                
+                // Trigger check animation if needed
+                setTimeout(() => triggerCheckAnimation(), 100);
               }
             } catch {
               // Invalid move, just deselect
@@ -206,6 +247,7 @@ const Board: React.FC = () => {
         const squareNotation = String.fromCharCode(97 + col) + (8 - row); // Convert to chess notation
         const isSelected = selectedSquare === squareNotation;
         const isLegalMove = legalMoves.includes(squareNotation);
+        const isLastMove = !!(lastMove && (lastMove.from === squareNotation || lastMove.to === squareNotation));
 
         squares.push(
           <Square
@@ -214,6 +256,7 @@ const Board: React.FC = () => {
             piece={piece}
             isSelected={isSelected}
             isLegalMove={isLegalMove}
+            lastMove={isLastMove}
             onClick={() => handleSquareClick(row, col)}
           />
         );
@@ -223,7 +266,11 @@ const Board: React.FC = () => {
   };
 
   return (
-    <>
+    <GameContainer
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <GameInfo 
         game={game} 
         gameMode={gameMode}
@@ -231,17 +278,24 @@ const Board: React.FC = () => {
         onResetGame={resetGame} 
         onToggleGameMode={toggleGameMode}
       />
-      <BoardContainer>
+      <BoardContainer
+        animate={isGameShaking ? { x: [0, -5, 5, -5, 5, 0] } : { x: 0 }}
+        transition={{ duration: 0.6 }}
+        initial={{ rotateX: 45, opacity: 0 }}
+        whileInView={{ rotateX: 0, opacity: 1 }}
+      >
         {renderSquares()}
       </BoardContainer>
-      {pendingPromotion && (
-        <PromotionDialog
-          color={pendingPromotion.color}
-          onPromotion={handlePromotion}
-          onCancel={handlePromotionCancel}
-        />
-      )}
-    </>
+      <AnimatePresence>
+        {pendingPromotion && (
+          <PromotionDialog
+            color={pendingPromotion.color}
+            onPromotion={handlePromotion}
+            onCancel={handlePromotionCancel}
+          />
+        )}
+      </AnimatePresence>
+    </GameContainer>
   );
 };
 

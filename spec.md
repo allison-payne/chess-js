@@ -156,11 +156,20 @@ This document outlines the plan for developing a browser-based chess game. The i
 - ✅ Proper promotion handling for both human and AI players
 - ✅ AI automatically promotes to Queen for optimal play
 
-### 🔄 Phase 6: Animations & Polish (PENDING)
+### ✅ Phase 6: Animations & Polish (COMPLETED)
 
-- 🔄 Add piece movement animations with Framer Motion
-- 🔄 Refine UI/UX styling and visual effects
-- 🔄 Enhanced board and piece styling
+- ✅ Added Framer Motion for smooth piece animations
+- ✅ Piece entrance animations with scale/opacity effects
+- ✅ Hover and tap interactions for pieces (scale 1.1 on hover, 0.95 on tap)
+- ✅ Board entrance animation with 3D rotation effect
+- ✅ Square animations with AnimatePresence for piece transitions
+- ✅ Pulsing animation for legal move indicators
+- ✅ Promotion dialog with smooth modal animations and staggered piece selection
+- ✅ Check state animation with board shake effect
+- ✅ GameInfo status text transitions and animated state changes
+- ✅ Button hover/tap animations for improved interactivity
+- ✅ Last move highlighting with visual feedback
+- ✅ Professional polish with coordinated animation timing
 
 ## 9. Current Implementation Status
 
@@ -168,19 +177,22 @@ This document outlines the plan for developing a browser-based chess game. The i
 
 - **Full Chess Game Logic**: Complete implementation using chess.js with proper move validation, check detection, and game-over conditions
 - **Interactive Board**: 8x8 grid with click-to-select and click-to-move functionality
-- **Visual Feedback**: Selected pieces highlighted in yellow, legal moves shown with green circular indicators
+- **Visual Feedback**: Selected pieces highlighted in yellow, legal moves shown with green circular indicators with pulsing animation
 - **AI Opponent**: Two difficulty levels (random and easy/capture-preferring) with automatic move execution
 - **Game Modes**: Toggle between Player vs Player and Player vs AI
-- **Pawn Promotion**: Complete implementation with modal dialog for piece selection
-- **Game Status Display**: Real-time updates showing turn, check status, game outcome
+- **Pawn Promotion**: Complete implementation with animated modal dialog for piece selection
+- **Game Status Display**: Real-time updates showing turn, check status, game outcome with smooth transitions
 - **Responsive Design**: Clean styling with Emotion/styled-components
+- **Smooth Animations**: Comprehensive Framer Motion integration with piece movement, board effects, and UI transitions
+- **Professional Polish**: Enhanced user experience with hover effects, tap feedback, and coordinated animations
 
 ### Technical Implementation
 
 - **Frontend**: React 18 + TypeScript + Vite
 - **Chess Logic**: chess.js library for robust rule validation
 - **Styling**: Emotion/styled-components for component-scoped CSS
-- **State Management**: React hooks (useState, useEffect) for game state
+- **Animations**: Framer Motion for smooth transitions and interactive effects
+- **State Management**: React hooks (useState, useEffect, useCallback) for game state and animation triggers
 - **AI Architecture**: Modular ChessAI class with pluggable strategies
 
 ### File Structure
@@ -188,14 +200,23 @@ This document outlines the plan for developing a browser-based chess game. The i
 ```
 src/
 ├── components/
-│   ├── Board/Board.tsx          # Main game logic and board rendering
-│   ├── Square/Square.tsx        # Individual square with piece display
-│   ├── Piece/Piece.tsx         # Unicode piece rendering
-│   ├── GameInfo/GameInfo.tsx   # Game status and controls
-│   └── PromotionDialog/PromotionDialog.tsx # Pawn promotion modal
+│   ├── Board/Board.tsx          # Main game logic, board rendering, and animation coordination
+│   ├── Square/Square.tsx        # Individual square with piece display and transition animations
+│   ├── Piece/Piece.tsx         # Unicode piece rendering with hover/tap effects
+│   ├── GameInfo/GameInfo.tsx   # Game status and controls with animated state transitions
+│   └── PromotionDialog/PromotionDialog.tsx # Animated pawn promotion modal with staggered effects
 └── logic/
     └── ai.ts                   # AI implementation with multiple strategies
 ```
+
+### Animation Features ✅
+
+- **Piece Interactions**: Scale/opacity entrance animations, hover effects (1.1x scale), tap feedback (0.95x scale)
+- **Board Dynamics**: 3D entrance animation with rotation, shake effect during check states
+- **Square Transitions**: AnimatePresence for smooth piece movement, pulsing legal move indicators
+- **Modal Animations**: Smooth promotion dialog with overlay fade and staggered piece selection
+- **State Feedback**: Animated status text changes, button interactions, last move highlighting
+- **Performance**: Optimized animation timing and useCallback for efficient re-renders
 
 ## 10. Future Enhancements (Post-Initial Version)
 

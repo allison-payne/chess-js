@@ -1,6 +1,6 @@
-# Chess Game - React + TypeScript
+# Chess Game - React + TypeScript + Framer Motion
 
-A fully functional browser-based chess game built with React, TypeScript, and Vite. Features both Player vs Player and Player vs AI modes with complete chess rule implementation.
+A fully functional browser-based chess game built with React, TypeScript, and Vite. Features smooth animations, both Player vs Player and Player vs AI modes, and complete chess rule implementation with professional polish.
 
 ## 🎮 Features
 
@@ -8,12 +8,15 @@ A fully functional browser-based chess game built with React, TypeScript, and Vi
 
 - **Complete Chess Rules**: Full implementation using chess.js library
 - **Interactive Board**: Click-to-select and click-to-move piece interaction
+- **Smooth Animations**: Professional Framer Motion integration throughout
 - **Visual Feedback**:
   - Selected pieces highlighted in yellow
-  - Legal moves shown with green circular indicators
-  - Real-time game status updates
-- **Pawn Promotion**: Modal dialog for piece selection upon pawn promotion
+  - Legal moves shown with pulsing green circular indicators
+  - Last move highlighting for better game tracking
+  - Real-time game status updates with smooth transitions
+- **Pawn Promotion**: Animated modal dialog for piece selection upon pawn promotion
 - **Game Detection**: Automatic detection of check, checkmate, stalemate, and draw conditions
+- **Enhanced Interactions**: Hover effects, tap feedback, and responsive animations
 
 ### Game Modes
 
@@ -24,10 +27,16 @@ A fully functional browser-based chess game built with React, TypeScript, and Vi
 
 ### UI/UX
 
-- **Clean Design**: Modern styling with Emotion/styled-components
+- **Modern Design**: Clean styling with Emotion/styled-components
+- **Professional Animations**: Comprehensive Framer Motion integration
+  - Piece entrance animations with scale/opacity effects
+  - Hover interactions (1.1x scale) and tap feedback (0.95x scale)
+  - Board entrance with 3D rotation effect
+  - Shake animation during check states
+  - Smooth modal transitions with staggered effects
 - **Responsive Layout**: Works well on different screen sizes
-- **Game Controls**: Easy game reset and mode switching
-- **Status Display**: Clear indication of current turn and game state
+- **Game Controls**: Animated buttons for game reset and mode switching
+- **Status Display**: Clear indication of current turn and game state with smooth transitions
 
 ## 🚀 Getting Started
 
@@ -73,18 +82,19 @@ npm run dev
 - **Build Tool**: Vite
 - **Chess Logic**: chess.js library
 - **Styling**: Emotion/styled-components
-- **State Management**: React hooks (useState, useEffect)
+- **Animations**: Framer Motion for smooth transitions and interactive effects
+- **State Management**: React hooks (useState, useEffect, useCallback)
 
 ## 📁 Project Structure
 
 ```
 src/
 ├── components/
-│   ├── Board/Board.tsx          # Main game logic and board rendering
-│   ├── Square/Square.tsx        # Individual square with piece display
-│   ├── Piece/Piece.tsx         # Unicode piece rendering
-│   ├── GameInfo/GameInfo.tsx   # Game status and controls
-│   └── PromotionDialog/PromotionDialog.tsx # Pawn promotion modal
+│   ├── Board/Board.tsx          # Main game logic, board rendering, and animation coordination
+│   ├── Square/Square.tsx        # Individual square with piece display and transition animations
+│   ├── Piece/Piece.tsx         # Unicode piece rendering with hover/tap effects
+│   ├── GameInfo/GameInfo.tsx   # Game status and controls with animated state transitions
+│   └── PromotionDialog/PromotionDialog.tsx # Animated pawn promotion modal with staggered effects
 └── logic/
     └── ai.ts                   # AI implementation with multiple strategies
 ```
@@ -97,6 +107,36 @@ The AI opponent uses a modular architecture with different strategies:
 - **Easy Strategy**: Prioritizes capturing opponent pieces when possible, otherwise plays randomly
 
 Future enhancements could include more sophisticated algorithms like Minimax with Alpha-Beta pruning.
+
+## ✨ Animation Features
+
+The game includes comprehensive animations powered by Framer Motion:
+
+### Piece Interactions
+
+- **Entrance Animations**: Scale and opacity effects when pieces appear
+- **Hover Effects**: 1.1x scale on piece hover for better interactivity
+- **Tap Feedback**: 0.95x scale on piece selection for responsive feel
+- **Rotation Effects**: Special animations during captures and promotions
+
+### Board Dynamics
+
+- **3D Entrance**: Board appears with rotateX animation for dramatic effect
+- **Check Animation**: Board shake effect when a player is in check
+- **Last Move Highlighting**: Visual tracking of the most recent move
+
+### UI Transitions
+
+- **Modal Animations**: Smooth promotion dialog with overlay fade and staggered piece selection
+- **Status Transitions**: Animated text changes for game state updates
+- **Button Interactions**: Hover and tap effects on all interactive elements
+- **Legal Move Indicators**: Pulsing animations on available move squares
+
+### Performance Optimizations
+
+- **useCallback**: Optimized animation triggers for efficient re-renders
+- **AnimatePresence**: Smooth transitions when components mount/unmount
+- **Coordinated Timing**: Carefully timed animations for professional feel
 
 ## 🔧 Development
 
@@ -117,10 +157,11 @@ The codebase is structured for easy extension:
 
 ## 🎨 Customization
 
-The game uses Emotion for styling, making it easy to customize:
+The game uses Emotion for styling and Framer Motion for animations, making it easy to customize:
 
 - Board colors and sizing in `Board.tsx`
-- Piece styling in `Piece.tsx`
+- Piece styling and animations in `Piece.tsx`
+- Animation timing and effects throughout all components
 - UI theme colors in respective component files
 
 ## 📝 Chess Rules Implemented
@@ -136,14 +177,17 @@ The game uses Emotion for styling, making it easy to customize:
 
 ## 🔮 Future Enhancements
 
-- [ ] Piece movement animations with Framer Motion
-- [ ] Enhanced AI with Minimax algorithm
+- [ ] Enhanced AI with Minimax algorithm and Alpha-Beta pruning
+- [ ] Integration with WebAssembly chess engines (e.g., Stockfish.js)
 - [ ] Move history and game notation display
-- [ ] Sound effects and better visual feedback
+- [ ] Sound effects and audio feedback
 - [ ] Drag-and-drop piece movement
 - [ ] Customizable themes and piece sets
 - [ ] Online multiplayer capabilities
-- [ ] Game timing and clocks
+- [ ] Game timing and chess clocks
+- [ ] Persistent game state with localStorage
+- [ ] Move analysis and hints
+- [ ] Tournament mode and player statistics
 
 ## 📄 License
 
