@@ -65,6 +65,10 @@ const Board: React.FC = () => {
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null);
   const [isGameShaking, setIsGameShaking] = useState(false);
   
+  // Drag and drop state
+  const [draggedPiece, setDraggedPiece] = useState<{ type: PieceSymbol; color: PieceColor; from: string } | null>(null);
+  const [dragTargetSquares, setDragTargetSquares] = useState<string[]>([]);
+  
   // Move history and navigation state
   const [moveHistory, setMoveHistory] = useState<MoveHistoryEntry[]>([]);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1); // -1 means current position
@@ -291,6 +295,114 @@ const Board: React.FC = () => {
     const moves = game.moves({ verbose: true });
     const move = moves.find(m => m.from === from && m.to === to);
     return move ? move.flags.includes('p') : false; // 'p' flag indicates promotion
+  };
+
+  // Drag and drop handlers
+  const handlePieceDragStart = (piece: { type: PieceSymbol; color: PieceColor }, from: string) => {
+    // Don't allow drag if game is over, AI is thinking, or not viewing current position
+    if (game.isGameOver() || isAIThinking || !isViewingCurrentPosition) {
+      return;
+    }
+
+    // In AI mode, only allow human player (white) to move
+    if (gameMode === 'ai' && game.turn() === 'b') {
+      return;
+    }
+
+    // Only allow dragging pieces of the current player
+    if (piece.color !== game.turn()) {
+      audioManager.playSound('illegal');
+      return;
+    }
+
+    setDraggedPiece({ ...piece, from });
+    
+    // Get legal moves for this piece and set as drag targets
+    const allMoves = game.moves({ verbose: true });
+    const pieceMoves = allMoves.filter(move => move.from === from);
+    const moveSquares = pieceMoves.map(move => move.to);
+    setDragTargetSquares(moveSquares);
+    
+    // Also select the piece for visual feedback
+    setSelectedSquare(from);
+    setLegalMoves(moveSquares);
+    
+    // Play selection sound
+    audioManager.playSound('selection');
+  };
+
+  const handlePieceDragEnd = (piece: { type: PieceSymbol; color: PieceColor }, from: string, to: string | null) => {
+    // Clear drag state
+    setDraggedPiece(null);
+    setDragTargetSquares([]);
+
+    // If no valid drop target, just clear selection
+    if (!to || to === from) {
+      setSelectedSquare(null);
+      setLegalMoves([]);
+      return;
+    }
+
+    // Check if this is a legal move
+    if (!legalMoves.includes(to)) {
+      setSelectedSquare(null);
+      setLegalMoves([]);
+      audioManager.playSound('illegal');
+      return;
+    }
+
+    // Check if this move would result in pawn promotion
+    if (wouldPromote(from, to)) {
+      // Set up promotion dialog
+      setPendingPromotion({
+        from,
+        to,
+        color: piece.color
+      });
+    } else {
+      // Make the move normally
+      try {
+        const move = game.move({ from, to });
+        if (move) {
+          // Update last move for highlighting
+          setLastMove({ from, to });
+          
+          // Move was successful, update the game state
+          setSelectedSquare(null);
+          setLegalMoves([]);
+          
+          // Force re-render
+          setGameUpdateTrigger(prev => prev + 1);
+          
+          // Play sound based on move type
+          if (move.captured) {
+            audioManager.playSound('capture');
+          } else {
+            audioManager.playSound('move');
+          }
+          
+          // Check for special game states after human move
+          if (game.isCheckmate()) {
+            setTimeout(() => audioManager.playSound('checkmate'), 200);
+          } else if (game.isStalemate() || game.isDraw()) {
+            setTimeout(() => audioManager.playSound('stalemate'), 200);
+          } else if (game.isCheck()) {
+            setTimeout(() => audioManager.playSound('check'), 200);
+          }
+          
+          // Update move history
+          updateMoveHistory(game);
+          
+          // Trigger check animation if needed
+          setTimeout(() => triggerCheckAnimation(), 100);
+        }
+      } catch {
+        // Invalid move, just deselect
+        setSelectedSquare(null);
+        setLegalMoves([]);
+        audioManager.playSound('illegal');
+      }
+    }
   };
 
   // Storage handlers
@@ -552,6 +664,7 @@ const Board: React.FC = () => {
         const isSelected = selectedSquare === squareNotation && isViewingCurrentPosition; // Only show selection on current position
         const isLegalMove = legalMoves.includes(squareNotation) && isViewingCurrentPosition; // Only show legal moves on current position
         const isLastMove = !!(lastMove && (lastMove.from === squareNotation || lastMove.to === squareNotation));
+        const isDragTarget = dragTargetSquares.includes(squareNotation);
 
         squares.push(
           <Square
@@ -561,7 +674,11 @@ const Board: React.FC = () => {
             isSelected={isSelected}
             isLegalMove={isLegalMove}
             lastMove={isLastMove}
+            isDragTarget={isDragTarget}
+            squarePosition={squareNotation}
             onClick={() => handleSquareClick(row, col)}
+            onPieceDragStart={handlePieceDragStart}
+            onPieceDragEnd={handlePieceDragEnd}
           />
         );
       }

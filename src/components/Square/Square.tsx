@@ -12,6 +12,10 @@ interface SquareProps {
   isLegalMove?: boolean;
   onClick?: () => void;
   lastMove?: boolean;
+  squarePosition?: string;
+  isDragTarget?: boolean;
+  onPieceDragStart?: (piece: { type: PieceSymbol; color: PieceColor }, from: string) => void;
+  onPieceDragEnd?: (piece: { type: PieceSymbol; color: PieceColor }, from: string, to: string | null) => void;
 }
 
 // Define props specifically for the SquareContainer styled component
@@ -20,6 +24,7 @@ interface SquareContainerProps {
   isSelected?: boolean;
   isLegalMove?: boolean;
   lastMove?: boolean;
+  isDragTarget?: boolean;
 }
 
 // Styled component for a single square
@@ -32,6 +37,9 @@ const SquareContainer = styled(motion.div)<SquareContainerProps>`
     }
     if (props.lastMove) {
       return '#ffeaa7'; // Light yellow for last move
+    }
+    if (props.isDragTarget) {
+      return '#90EE90'; // Light green for drag target
     }
     if (props.isLegalMove) {
       return '#90EE90'; // Light green for legal move squares
@@ -69,19 +77,51 @@ const SquareContainer = styled(motion.div)<SquareContainerProps>`
       100% { transform: scale(1); opacity: 0.6; }
     }
   `}
+  
+  ${props => props.isDragTarget && `
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 2px;
+      border: 3px dashed #4CAF50;
+      border-radius: 4px;
+      background-color: rgba(76, 175, 80, 0.1);
+      pointer-events: none;
+      animation: dragTargetPulse 1s infinite;
+    }
+    
+    @keyframes dragTargetPulse {
+      0% { opacity: 0.5; }
+      50% { opacity: 1; }
+      100% { opacity: 0.5; }
+    }
+  `}
 `;
 
-const Square: React.FC<SquareProps> = ({ isEven, piece, isSelected = false, isLegalMove = false, onClick, lastMove = false }) => {
+const Square: React.FC<SquareProps> = ({ 
+  isEven, 
+  piece, 
+  isSelected = false, 
+  isLegalMove = false, 
+  onClick, 
+  lastMove = false,
+  squarePosition,
+  isDragTarget = false,
+  onPieceDragStart,
+  onPieceDragEnd
+}) => {
   return (
     <SquareContainer 
       isEven={isEven} 
       isSelected={isSelected}
       isLegalMove={isLegalMove}
       lastMove={lastMove}
+      isDragTarget={isDragTarget}
       onClick={onClick}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.1 }}
+      data-square={squarePosition} // For drag-and-drop target detection
     >
       <AnimatePresence mode="wait">
         {piece && (
@@ -92,7 +132,15 @@ const Square: React.FC<SquareProps> = ({ isEven, piece, isSelected = false, isLe
             exit={{ scale: 0, rotate: 180 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
           >
-            <Piece type={piece.type} color={piece.color} />
+            <Piece 
+              type={piece.type} 
+              color={piece.color}
+              isDraggable={true}
+              isSelected={isSelected}
+              squarePosition={squarePosition}
+              onDragStart={onPieceDragStart}
+              onDragEnd={onPieceDragEnd}
+            />
           </motion.div>
         )}
       </AnimatePresence>
