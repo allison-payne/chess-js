@@ -1,6 +1,6 @@
 # Chess Game - React + TypeScript + Framer Motion
 
-A fully functional browser-based chess game built with React, TypeScript, and Vite. Features smooth animations, both Player vs Player and Player vs AI modes, and complete chess rule implementation with professional polish.
+A fully functional browser-based chess game built with React, TypeScript, and Vite. Features smooth animations, comprehensive game modes, move history navigation, persistent storage, audio feedback, and professional polish with a clean, modern interface.
 
 ## 🎮 Features
 
@@ -18,6 +18,21 @@ A fully functional browser-based chess game built with React, TypeScript, and Vi
 - **Game Detection**: Automatic detection of check, checkmate, stalemate, and draw conditions
 - **Enhanced Interactions**: Hover effects, tap feedback, and responsive animations
 
+### Game Management
+
+- **Move History & Navigation**: Complete game timeline with interactive move list
+  - Click any move to jump to that position
+  - Minimalist icon-based navigation controls (⏮ ◀ ▶ ⏭)
+  - Visual feedback for current position
+- **Persistent Storage**: Save and load games with custom names
+  - Auto-save functionality after each move
+  - Game browser for managing saved games
+  - Complete game state preservation
+- **Audio System**: Comprehensive sound effects and controls
+  - Move, capture, check, checkmate, and promotion sounds
+  - Configurable volume and mute settings
+  - Persistent audio preferences
+
 ### Game Modes
 
 - **Player vs Player**: Local hotseat gameplay for two human players
@@ -27,15 +42,18 @@ A fully functional browser-based chess game built with React, TypeScript, and Vi
 
 ### UI/UX
 
-- **Modern Design**: Clean styling with Emotion/styled-components
+- **Modern Design**: Clean styling with Emotion/styled-components and optimized layout
 - **Professional Animations**: Comprehensive Framer Motion integration
   - Piece entrance animations with scale/opacity effects
   - Hover interactions (1.1x scale) and tap feedback (0.95x scale)
   - Board entrance with 3D rotation effect
   - Shake animation during check states
   - Smooth modal transitions with staggered effects
-- **Responsive Layout**: Works well on different screen sizes
-- **Game Controls**: Animated buttons for game reset and mode switching
+- **Responsive Layout**: Optimized component sizing with proper alignment
+  - GameInfo header with horizontal layout and organized sections
+  - 480px board with matching 220px move history panel
+  - Simplified button text with emoji icons (💾 📁 🆕)
+- **Game Controls**: Intuitive interface with visual feedback
 - **Status Display**: Clear indication of current turn and game state with smooth transitions
 
 ## 🚀 Getting Started
@@ -74,7 +92,10 @@ npm run dev
 2. **Make a Move**: Click on a highlighted green square to move the selected piece
 3. **Pawn Promotion**: When a pawn reaches the opposite end, choose your promotion piece
 4. **Game Modes**: Toggle between "Player vs Player" and "vs AI" using the mode button
-5. **Reset Game**: Click "New Game" to start over
+5. **Navigate History**: Use the move list or navigation buttons (⏮ ◀ ▶ ⏭) to view previous positions
+6. **Save/Load Games**: Use the 💾 Save and 📁 Load buttons to manage your games
+7. **Audio Controls**: Adjust volume or mute sounds using the audio controls
+8. **Reset Game**: Click "🆕 New" to start over
 
 ## 🛠️ Technology Stack
 
@@ -90,13 +111,19 @@ npm run dev
 ```
 src/
 ├── components/
-│   ├── Board/Board.tsx          # Main game logic, board rendering, and animation coordination
+│   ├── Board/Board.tsx          # Main game logic, board rendering, and storage integration
 │   ├── Square/Square.tsx        # Individual square with piece display and transition animations
 │   ├── Piece/Piece.tsx         # Unicode piece rendering with hover/tap effects
-│   ├── GameInfo/GameInfo.tsx   # Game status and controls with animated state transitions
-│   └── PromotionDialog/PromotionDialog.tsx # Animated pawn promotion modal with staggered effects
+│   ├── GameInfo/GameInfo.tsx   # Game status and controls with horizontal layout
+│   ├── MoveHistory/MoveHistory.tsx # Interactive move history with minimalist navigation
+│   ├── PromotionDialog/PromotionDialog.tsx # Animated pawn promotion modal
+│   ├── SavedGames/SavedGames.tsx # Game browser for loading saved games
+│   ├── SaveGameDialog/SaveGameDialog.tsx # Dialog for saving games
+│   └── AudioControls/AudioControls.tsx # Audio settings and volume controls
 └── logic/
-    └── ai.ts                   # AI implementation with multiple strategies
+    ├── ai.ts                   # AI implementation with multiple strategies
+    ├── audioManager.ts         # Audio system with configurable sound effects
+    └── gameStorage.ts          # Persistent storage for saving/loading games
 ```
 
 ## 🤖 AI Implementation
@@ -131,6 +158,14 @@ The game includes comprehensive animations powered by Framer Motion:
 - **Status Transitions**: Animated text changes for game state updates
 - **Button Interactions**: Hover and tap effects on all interactive elements
 - **Legal Move Indicators**: Pulsing animations on available move squares
+- **Navigation Controls**: Icon-based move history navigation with tooltips
+
+### Game Features
+
+- **Move History**: Interactive timeline with click-to-navigate functionality
+- **Game Storage**: Save/load capabilities with auto-save and custom naming
+- **Audio Feedback**: Contextual sound effects for all game interactions
+- **Layout Optimization**: Properly aligned components with efficient space usage
 
 ### Performance Optimizations
 
@@ -179,15 +214,18 @@ The game uses Emotion for styling and Framer Motion for animations, making it ea
 
 - [ ] Enhanced AI with Minimax algorithm and Alpha-Beta pruning
 - [ ] Integration with WebAssembly chess engines (e.g., Stockfish.js)
-- [ ] Move history and game notation display
-- [ ] Sound effects and audio feedback
+- [x] ~~Move history and game notation display~~ ✅ **COMPLETED**
+- [x] ~~Sound effects and audio feedback~~ ✅ **COMPLETED**
 - [ ] Drag-and-drop piece movement
 - [ ] Customizable themes and piece sets
 - [ ] Online multiplayer capabilities
 - [ ] Game timing and chess clocks
-- [ ] Persistent game state with localStorage
+- [x] ~~Persistent game state with localStorage~~ ✅ **COMPLETED**
 - [ ] Move analysis and hints
 - [ ] Tournament mode and player statistics
+- [ ] Export/import PGN files
+- [ ] Opening book integration
+- [ ] Endgame tablebase support
 
 ## 📄 License
 

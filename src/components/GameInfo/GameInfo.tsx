@@ -10,6 +10,8 @@ interface GameInfoProps {
   isAIThinking: boolean;
   onResetGame: () => void;
   onToggleGameMode: () => void;
+  onShowSaveDialog?: () => void;
+  onShowSavedGames?: () => void;
 }
 
 const GameInfoContainer = styled(motion.div)`
@@ -18,7 +20,12 @@ const GameInfoContainer = styled(motion.div)`
   background-color: #f5f5f5;
   border-radius: 8px;
   border: 2px solid #333;
-  max-width: 400px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 15px;
 `;
 
 const StatusText = styled(motion.h2)`
@@ -65,12 +72,19 @@ const ResetButton = styled(motion.button)`
 `;
 
 const AudioControlsWrapper = styled.div`
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
 `;
 
-const GameInfo: React.FC<GameInfoProps> = ({ game, gameMode, isAIThinking, onResetGame, onToggleGameMode }) => {
+const GameInfo: React.FC<GameInfoProps> = ({ 
+  game, 
+  gameMode, 
+  isAIThinking, 
+  onResetGame, 
+  onToggleGameMode,
+  onShowSaveDialog,
+  onShowSavedGames
+}) => {
   const getGameStatus = () => {
     if (game.isCheckmate()) {
       const winner = game.turn() === 'w' ? 'Black' : 'White';
@@ -120,44 +134,80 @@ const GameInfo: React.FC<GameInfoProps> = ({ game, gameMode, isAIThinking, onRes
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <StatusText
-        key={getGameStatus()}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        {getGameStatus()}
-      </StatusText>
-      {!isGameOver() && (
-        <TurnText
-          key={getCurrentPlayer()}
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.2 }}
+      {/* Left section: Game status and turn */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+        <StatusText
+          key={getGameStatus()}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
         >
-          Current turn: {getCurrentPlayer()}
-        </TurnText>
-      )}
-      <ModeButton
-        onClick={onToggleGameMode}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        transition={{ duration: 0.1 }}
-      >
-        Mode: {gameMode === 'ai' ? 'vs AI' : 'Player vs Player'}
-      </ModeButton>
-      <ResetButton
-        onClick={onResetGame}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        transition={{ duration: 0.1 }}
-      >
-        New Game
-      </ResetButton>
+          {getGameStatus()}
+        </StatusText>
+        {!isGameOver() && (
+          <TurnText
+            key={getCurrentPlayer()}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            Current turn: {getCurrentPlayer()}
+          </TurnText>
+        )}
+      </div>
+
+      {/* Center section: Game mode and audio controls */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+        <ModeButton
+          onClick={onToggleGameMode}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ duration: 0.1 }}
+        >
+          Mode: {gameMode === 'ai' ? 'vs AI' : 'Player vs Player'}
+        </ModeButton>
+        <AudioControlsWrapper>
+          <AudioControls />
+        </AudioControlsWrapper>
+      </div>
       
-      <AudioControlsWrapper>
-        <AudioControls />
-      </AudioControlsWrapper>
+      {/* Right section: Control buttons */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
+        {/* Save/Load buttons */}
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {onShowSaveDialog && (
+            <ModeButton
+              onClick={onShowSaveDialog}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.1 }}
+              style={{ backgroundColor: '#FF9800' }}
+            >
+              💾 Save
+            </ModeButton>
+          )}
+          {onShowSavedGames && (
+            <ModeButton
+              onClick={onShowSavedGames}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.1 }}
+              style={{ backgroundColor: '#9C27B0' }}
+            >
+              📁 Load
+            </ModeButton>
+          )}
+        </div>
+        
+        <ResetButton
+          onClick={onResetGame}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ duration: 0.1 }}
+        >
+          🆕 New
+        </ResetButton>
+      </div>
     </GameInfoContainer>
   );
 };

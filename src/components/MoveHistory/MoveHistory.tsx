@@ -19,8 +19,8 @@ interface MoveHistoryProps {
 }
 
 const HistoryContainer = styled(motion.div)`
-  width: 300px;
-  height: 400px;
+  width: 220px;
+  height: 480px;
   background-color: #f8f8f8;
   border: 2px solid #333;
   border-radius: 8px;
@@ -42,7 +42,7 @@ const MovesContainer = styled.div`
   overflow-y: auto;
   border: 1px solid #ddd;
   border-radius: 4px;
-  padding: 8px;
+  padding: 10px;
   background-color: white;
 `;
 
@@ -72,12 +72,12 @@ const MoveButton = styled(motion.button)<{ isActive: boolean; isWhite: boolean }
   color: ${props => props.isActive ? 'white' : '#333'};
   border: 1px solid ${props => props.isActive ? '#4CAF50' : '#ccc'};
   border-radius: 4px;
-  padding: 4px 8px;
+  padding: 4px 6px;
   margin-right: 4px;
   cursor: pointer;
   font-family: 'Courier New', monospace;
   font-size: 0.85em;
-  min-width: 50px;
+  min-width: 45px;
   
   &:hover {
     background-color: ${props => 
@@ -89,21 +89,24 @@ const MoveButton = styled(motion.button)<{ isActive: boolean; isWhite: boolean }
 `;
 
 const NavigationControls = styled.div`
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
   margin-top: 12px;
-  gap: 4px;
 `;
 
 const NavButton = styled(motion.button)<{ disabled: boolean }>`
-  padding: 8px 12px;
+  padding: 8px;
   background-color: ${props => props.disabled ? '#ccc' : '#2196F3'};
   color: ${props => props.disabled ? '#666' : 'white'};
   border: none;
   border-radius: 4px;
   cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
-  font-size: 0.8em;
-  flex: 1;
+  font-size: 14px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   
   &:hover {
     background-color: ${props => props.disabled ? '#ccc' : '#1976D2'};
@@ -192,8 +195,9 @@ const MoveHistory: React.FC<MoveHistoryProps> = ({
           onClick={() => onNavigate('first')}
           whileHover={!canNavigateBack ? {} : { scale: 1.05 }}
           whileTap={!canNavigateBack ? {} : { scale: 0.95 }}
+          title="First"
         >
-          ⏮ First
+          ⏮
         </NavButton>
         
         <NavButton
@@ -201,8 +205,9 @@ const MoveHistory: React.FC<MoveHistoryProps> = ({
           onClick={() => onNavigate('prev')}
           whileHover={!canNavigateBack ? {} : { scale: 1.05 }}
           whileTap={!canNavigateBack ? {} : { scale: 0.95 }}
+          title="Previous"
         >
-          ◀ Prev
+          ◀
         </NavButton>
         
         <NavButton
@@ -210,8 +215,9 @@ const MoveHistory: React.FC<MoveHistoryProps> = ({
           onClick={() => onNavigate('next')}
           whileHover={!canNavigateForward ? {} : { scale: 1.05 }}
           whileTap={!canNavigateForward ? {} : { scale: 0.95 }}
+          title="Next"
         >
-          Next ▶
+          ▶
         </NavButton>
         
         <NavButton
@@ -219,8 +225,9 @@ const MoveHistory: React.FC<MoveHistoryProps> = ({
           onClick={() => onNavigate('last')}
           whileHover={!canNavigateForward ? {} : { scale: 1.05 }}
           whileTap={!canNavigateForward ? {} : { scale: 0.95 }}
+          title="Last"
         >
-          Last ⏭
+          ⏭
         </NavButton>
       </NavigationControls>
     </HistoryContainer>

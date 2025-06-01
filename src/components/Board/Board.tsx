@@ -6,8 +6,11 @@ import Square from '../Square/Square';
 import GameInfo from '../GameInfo/GameInfo';
 import PromotionDialog from '../PromotionDialog/PromotionDialog';
 import MoveHistory from '../MoveHistory/MoveHistory';
+import SavedGames from '../SavedGames/SavedGames';
+import SaveGameDialog from '../SaveGameDialog/SaveGameDialog';
 import ChessAI from '../../logic/ai';
 import audioManager from '../../logic/audioManager';
+import gameStorage, { type SavedGame } from '../../logic/gameStorage';
 import type { PieceSymbol, PieceColor } from '../Piece/Piece'; // Import types for piece data
 
 interface MoveHistoryEntry {
@@ -22,8 +25,8 @@ const BoardContainer = styled(motion.div)`
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  width: 400px; // Example size, can be adjusted
-  height: 400px; // Example size, can be adjusted
+  width: 480px;
+  height: 480px;
   border: 2px solid #333;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
@@ -32,17 +35,22 @@ const BoardContainer = styled(motion.div)`
 
 const GameContainer = styled(motion.div)`
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 20px;
-  padding: 20px;
-`;
-
-const LeftPanel = styled.div`
-  display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px;
+  padding: 20px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+`;
+
+const MainContent = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  width: 100%;
+  justify-content: center;
+  max-width: 750px;
 `;
 
 const Board: React.FC = () => {
@@ -68,6 +76,10 @@ const Board: React.FC = () => {
     to: string;
     color: PieceColor;
   } | null>(null);
+
+  // Storage dialog state
+  const [showSavedGames, setShowSavedGames] = useState(false);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
 
   // Trigger check animation
   const triggerCheckAnimation = useCallback(() => {
@@ -215,6 +227,11 @@ const Board: React.FC = () => {
     setTimeout(() => audioManager.playSound('gameStart'), 300);
   };
 
+  // Toggle game mode function
+  const toggleGameMode = () => {
+    setGameMode(prev => prev === 'ai' ? 'pvp' : 'ai');
+  };
+
   // Handle promotion selection
   const handlePromotion = (promotionPiece: PieceSymbol) => {
     if (!pendingPromotion) return;
@@ -276,11 +293,120 @@ const Board: React.FC = () => {
     return move ? move.flags.includes('p') : false; // 'p' flag indicates promotion
   };
 
-  // Toggle game mode
-  const toggleGameMode = () => {
-    setGameMode(prev => prev === 'pvp' ? 'ai' : 'pvp');
-    resetGame(); // Reset when changing modes
+  // Storage handlers
+  const handleSaveGame = (gameName: string) => {
+    try {
+      const gameStatus: 'checkmate' | 'stalemate' | 'draw' | 'playing' = game.isGameOver() 
+        ? (game.isCheckmate() ? 'checkmate' : game.isStalemate() ? 'stalemate' : 'draw')
+        : 'playing';
+        
+      const gameData = {
+        name: gameName,
+        fen: game.fen(),
+        pgn: game.pgn(),
+        gameMode,
+        currentTurn: game.turn(),
+        gameStatus,
+        lastMove,
+        moveCount: Math.ceil(game.history().length / 2),
+        timeSpent: 0 // Could be enhanced to track actual time
+      };
+
+      const savedGame = gameStorage.saveGame(gameData);
+      console.log('Game saved successfully:', savedGame);
+      setShowSaveDialog(false);
+      
+      // Play a confirmation sound
+      audioManager.playSound('selection');
+    } catch (error) {
+      console.error('Failed to save game:', error);
+    }
   };
+
+  const handleLoadGame = (savedGame: SavedGame) => {
+    try {
+      // Create new game from saved FEN
+      const newGame = new Chess(savedGame.fen);
+      setGame(newGame);
+      setDisplayGame(new Chess(savedGame.fen));
+      
+      // Restore game state
+      setGameMode(savedGame.gameMode);
+      setLastMove(savedGame.lastMove);
+      setSelectedSquare(null);
+      setLegalMoves([]);
+      setIsAIThinking(false);
+      setPendingPromotion(null);
+      
+      // Update move history from PGN
+      if (savedGame.pgn) {
+        const historyGame = new Chess();
+        try {
+          historyGame.loadPgn(savedGame.pgn);
+          const moves = historyGame.history({ verbose: true });
+          const newMoveHistory: MoveHistoryEntry[] = [];
+          
+          const tempGame = new Chess();
+          for (let i = 0; i < moves.length; i++) {
+            const move = moves[i];
+            tempGame.move(move);
+            newMoveHistory.push({
+              san: move.san,
+              moveNumber: Math.floor(i / 2) + 1,
+              color: move.color,
+              fen: tempGame.fen(),
+            });
+          }
+          
+          setMoveHistory(newMoveHistory);
+        } catch (error) {
+          console.warn('Failed to load PGN:', error);
+          setMoveHistory([]);
+        }
+      } else {
+        setMoveHistory([]);
+      }
+      
+      setCurrentMoveIndex(-1);
+      setGameUpdateTrigger(prev => prev + 1);
+      setShowSavedGames(false);
+      
+      // Play load sound
+      audioManager.playSound('gameStart');
+      
+      console.log('Game loaded successfully:', savedGame.name);
+    } catch (error) {
+      console.error('Failed to load game:', error);
+    }
+  };
+
+  const handleAutoSave = useCallback(() => {
+    if (!game.isGameOver()) {
+      try {
+        const gameData = {
+          fen: game.fen(),
+          pgn: game.pgn(),
+          gameMode,
+          currentTurn: game.turn(),
+          gameStatus: 'playing' as const,
+          lastMove,
+          moveCount: Math.ceil(game.history().length / 2),
+          timeSpent: 0
+        };
+        
+        gameStorage.autoSaveGame(gameData);
+      } catch (error) {
+        console.warn('Auto-save failed:', error);
+      }
+    }
+  }, [game, gameMode, lastMove]);
+
+  // Auto-save effect - save after each move
+  useEffect(() => {
+    if (game.history().length > 0) {
+      handleAutoSave();
+    }
+  }, [gameUpdateTrigger, handleAutoSave, game]);
 
   // Handle square click for piece selection
   const handleSquareClick = (row: number, col: number) => {
@@ -449,14 +575,28 @@ const Board: React.FC = () => {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <LeftPanel>
-        <GameInfo 
-          game={game} 
-          gameMode={gameMode}
-          isAIThinking={isAIThinking}
-          onResetGame={resetGame} 
-          onToggleGameMode={toggleGameMode}
+      {/* GameInfo as horizontal header */}
+      <GameInfo 
+        game={game} 
+        gameMode={gameMode}
+        isAIThinking={isAIThinking}
+        onResetGame={resetGame} 
+        onToggleGameMode={toggleGameMode}
+        onShowSaveDialog={() => setShowSaveDialog(true)}
+        onShowSavedGames={() => setShowSavedGames(true)}
+      />
+      
+      {/* Main content area with History and Board */}
+      <MainContent>
+        <MoveHistory
+          moves={moveHistory}
+          currentMoveIndex={currentMoveIndex}
+          onMoveClick={handleMoveClick}
+          onNavigate={handleNavigate}
+          canNavigateBack={currentMoveIndex > 0 || (currentMoveIndex === -1 && moveHistory.length > 0)}
+          canNavigateForward={currentMoveIndex < moveHistory.length - 1 || currentMoveIndex === -1}
         />
+        
         <BoardContainer
           animate={isGameShaking ? { x: [0, -5, 5, -5, 5, 0] } : { x: 0 }}
           transition={{ duration: 0.6 }}
@@ -465,16 +605,7 @@ const Board: React.FC = () => {
         >
           {renderSquares()}
         </BoardContainer>
-      </LeftPanel>
-      
-      <MoveHistory
-        moves={moveHistory}
-        currentMoveIndex={currentMoveIndex}
-        onMoveClick={handleMoveClick}
-        onNavigate={handleNavigate}
-        canNavigateBack={currentMoveIndex > 0 || (currentMoveIndex === -1 && moveHistory.length > 0)}
-        canNavigateForward={currentMoveIndex < moveHistory.length - 1 || currentMoveIndex === -1}
-      />
+      </MainContent>
       
       <AnimatePresence>
         {pendingPromotion && (
@@ -482,6 +613,28 @@ const Board: React.FC = () => {
             color={pendingPromotion.color}
             onPromotion={handlePromotion}
             onCancel={handlePromotionCancel}
+          />
+        )}
+        {showSavedGames && (
+          <SavedGames
+            isOpen={showSavedGames}
+            onClose={() => setShowSavedGames(false)}
+            onLoadGame={handleLoadGame}
+          />
+        )}
+        {showSaveDialog && (
+          <SaveGameDialog
+            isOpen={showSaveDialog}
+            onClose={() => setShowSaveDialog(false)}
+            onSave={handleSaveGame}
+            gameInfo={{
+              gameMode,
+              moveCount: Math.ceil(game.history().length / 2),
+              currentTurn: game.turn(),
+              gameStatus: game.isGameOver() 
+                ? (game.isCheckmate() ? 'checkmate' : game.isStalemate() ? 'stalemate' : 'draw')
+                : 'playing'
+            }}
           />
         )}
       </AnimatePresence>

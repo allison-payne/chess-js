@@ -91,25 +91,7 @@ const VolumeLabel = styled.span`
   text-align: center;
 `;
 
-const TestButton = styled(motion.button)`
-  background: rgba(33, 150, 243, 0.8);
-  border: none;
-  border-radius: 6px;
-  padding: 4px 8px;
-  color: white;
-  font-size: 11px;
-  cursor: pointer;
-  transition: all 0.2s ease;
 
-  &:hover {
-    background: rgba(33, 150, 243, 1);
-    transform: scale(1.05);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-`;
 
 interface AudioControlsProps {
   className?: string;
@@ -146,12 +128,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({ className }) => {
     }
   };
 
-  const handleTestSounds = () => {
-    // Play a quick test sequence
-    audioManager.playSound('move');
-    setTimeout(() => audioManager.playSound('capture'), 300);
-    setTimeout(() => audioManager.playSound('check'), 600);
-  };
+
 
   const volumePercentage = Math.round(settings.volume * 100);
 
@@ -183,15 +160,6 @@ const AudioControls: React.FC<AudioControlsProps> = ({ className }) => {
       />
 
       <VolumeLabel>{volumePercentage}%</VolumeLabel>
-
-      <TestButton
-        onClick={handleTestSounds}
-        disabled={!settings.enabled}
-        whileTap={{ scale: 0.9 }}
-        title="Test sounds"
-      >
-        🎵
-      </TestButton>
     </AudioControlsContainer>
   );
 };
