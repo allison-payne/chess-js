@@ -2,6 +2,7 @@ import React from 'react';
 import styled from '@emotion/styled';
 import { motion } from 'framer-motion';
 import { Chess } from 'chess.js';
+import AudioControls from '../AudioControls/AudioControls';
 
 interface GameInfoProps {
   game: Chess;
@@ -61,6 +62,12 @@ const ResetButton = styled(motion.button)`
   &:hover {
     background-color: #45a049;
   }
+`;
+
+const AudioControlsWrapper = styled.div`
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 `;
 
 const GameInfo: React.FC<GameInfoProps> = ({ game, gameMode, isAIThinking, onResetGame, onToggleGameMode }) => {
@@ -147,6 +154,10 @@ const GameInfo: React.FC<GameInfoProps> = ({ game, gameMode, isAIThinking, onRes
       >
         New Game
       </ResetButton>
+      
+      <AudioControlsWrapper>
+        <AudioControls />
+      </AudioControlsWrapper>
     </GameInfoContainer>
   );
 };

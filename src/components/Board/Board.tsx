@@ -7,6 +7,7 @@ import GameInfo from '../GameInfo/GameInfo';
 import PromotionDialog from '../PromotionDialog/PromotionDialog';
 import MoveHistory from '../MoveHistory/MoveHistory';
 import ChessAI from '../../logic/ai';
+import audioManager from '../../logic/audioManager';
 import type { PieceSymbol, PieceColor } from '../Piece/Piece'; // Import types for piece data
 
 interface MoveHistoryEntry {
@@ -169,6 +170,22 @@ const Board: React.FC = () => {
           // Force re-render
           setGameUpdateTrigger(prev => prev + 1);
           
+          // Play sound based on move type
+          if (aiMove.captured) {
+            audioManager.playSound('capture');
+          } else {
+            audioManager.playSound('move');
+          }
+          
+          // Check for special game states after AI move
+          if (game.isCheckmate()) {
+            setTimeout(() => audioManager.playSound('checkmate'), 200);
+          } else if (game.isStalemate() || game.isDraw()) {
+            setTimeout(() => audioManager.playSound('stalemate'), 200);
+          } else if (game.isCheck()) {
+            setTimeout(() => audioManager.playSound('check'), 200);
+          }
+          
           // Update move history after the move was made
           updateMoveHistory(game);
           
@@ -193,6 +210,9 @@ const Board: React.FC = () => {
     setMoveHistory([]);
     setCurrentMoveIndex(-1);
     setDisplayGame(new Chess());
+    
+    // Play game start sound
+    setTimeout(() => audioManager.playSound('gameStart'), 300);
   };
 
   // Handle promotion selection
@@ -215,6 +235,18 @@ const Board: React.FC = () => {
         
         // Force re-render
         setGameUpdateTrigger(prev => prev + 1);
+        
+        // Play promotion sound
+        audioManager.playSound('promotion');
+        
+        // Check for special game states after promotion
+        if (game.isCheckmate()) {
+          setTimeout(() => audioManager.playSound('checkmate'), 300);
+        } else if (game.isStalemate() || game.isDraw()) {
+          setTimeout(() => audioManager.playSound('stalemate'), 300);
+        } else if (game.isCheck()) {
+          setTimeout(() => audioManager.playSound('check'), 300);
+        }
         
         // Update move history
         updateMoveHistory(game);
@@ -277,6 +309,12 @@ const Board: React.FC = () => {
         const pieceMoves = allMoves.filter(move => move.from === square);
         const moveSquares = pieceMoves.map(move => move.to);
         setLegalMoves(moveSquares);
+        
+        // Play selection sound
+        audioManager.playSound('selection');
+      } else if (pieceData && pieceData.color !== game.turn()) {
+        // Trying to select opponent's piece - play illegal move sound
+        audioManager.playSound('illegal');
       }
     } else {
       // If a piece is already selected, try to move or deselect
@@ -317,6 +355,22 @@ const Board: React.FC = () => {
                 // Force re-render
                 setGameUpdateTrigger(prev => prev + 1);
                 
+                // Play sound based on move type
+                if (move.captured) {
+                  audioManager.playSound('capture');
+                } else {
+                  audioManager.playSound('move');
+                }
+                
+                // Check for special game states after human move
+                if (game.isCheckmate()) {
+                  setTimeout(() => audioManager.playSound('checkmate'), 200);
+                } else if (game.isStalemate() || game.isDraw()) {
+                  setTimeout(() => audioManager.playSound('stalemate'), 200);
+                } else if (game.isCheck()) {
+                  setTimeout(() => audioManager.playSound('check'), 200);
+                }
+                
                 // Update move history
                 updateMoveHistory(game);
                 
@@ -327,6 +381,8 @@ const Board: React.FC = () => {
               // Invalid move, just deselect
               setSelectedSquare(null);
               setLegalMoves([]);
+              // Play illegal move sound
+              audioManager.playSound('illegal');
             }
           }
         } else {
@@ -339,10 +395,17 @@ const Board: React.FC = () => {
             const pieceMoves = allMoves.filter(move => move.from === square);
             const moveSquares = pieceMoves.map(move => move.to);
             setLegalMoves(moveSquares);
+            
+            // Play selection sound
+            audioManager.playSound('selection');
           } else {
-            // Just deselect
+            // Just deselect or play illegal sound if trying to select opponent piece
             setSelectedSquare(null);
             setLegalMoves([]);
+            
+            if (pieceData && pieceData.color !== game.turn()) {
+              audioManager.playSound('illegal');
+            }
           }
         }
       }
