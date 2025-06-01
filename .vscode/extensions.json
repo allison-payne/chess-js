@@ -1,0 +1,71 @@
+{
+  "recommendations": [
+    // Core TypeScript and React Development
+    "ms-vscode.vscode-typescript-next",
+    "bradlc.vscode-tailwindcss",
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-eslint",
+
+    // React Development
+    "ms-vscode.vscode-react-refactor",
+    "rodrigovallades.es7-react-js-snippets",
+    "burkeholland.simple-react-snippets",
+
+    // TypeScript Enhanced Support
+    "usernamehw.errorlens",
+    "ms-vscode.vscode-json",
+    "bradlc.vscode-tailwindcss",
+
+    // Styling and CSS-in-JS (for Emotion/styled-components)
+    "styled-components.vscode-styled-components",
+    "jpoissonnier.vscode-styled-components",
+    "ms-vscode.vscode-css-peek",
+
+    // Animation and Motion (for Framer Motion)
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode.vscode-css-peek",
+
+    // Code Quality and Formatting
+    "streetsidesoftware.code-spell-checker",
+    "davidanson.vscode-markdownlint",
+    "ms-vscode.vscode-todo-highlight",
+
+    // Git and Version Control
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+    "donjayamanne.githistory",
+
+    // Development Workflow
+    "ms-vscode.live-server",
+    "formulahendry.auto-rename-tag",
+    "christian-kohler.path-intellisense",
+    "ms-vscode.vscode-json",
+
+    // Debugging and Testing
+    "ms-vscode.js-debug",
+    "hbenl.vscode-test-explorer",
+    "ms-vscode.vscode-jest",
+
+    // UI/UX Enhancement
+    "pkief.material-icon-theme",
+    "zhuangtongfa.material-theme",
+    "ms-vscode.theme-predefined",
+
+    // Productivity
+    "ms-vscode.vscode-clipboard-manager",
+    "alefragnani.bookmarks",
+    "gruntfuggly.todo-tree",
+    "aaron-bond.better-comments",
+
+    // Package Management
+    "christian-kohler.npm-intellisense",
+    "eg2.vscode-npm-script",
+    "mskelton.npm-outdated"
+  ],
+  "unwantedRecommendations": [
+    // Avoid conflicting formatters
+    "ms-vscode.vscode-typescript",
+    "hookyqr.beautify",
+    "ms-vscode.vscode-css-language-features"
+  ]
+}
