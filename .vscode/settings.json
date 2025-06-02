@@ -96,7 +96,7 @@
   },
 
   // Terminal Settings
-  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
   "terminal.integrated.fontSize": 14,
 
   // Git Settings

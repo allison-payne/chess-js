@@ -7,15 +7,15 @@ export interface AudioSettings {
 }
 
 export type SoundType =
-  | "move" // Regular piece movement
-  | "capture" // Piece capture
-  | "check" // King in check
-  | "checkmate" // Game over - checkmate
-  | "stalemate" // Game over - stalemate
-  | "promotion" // Pawn promotion
-  | "selection" // Piece selection (subtle)
-  | "gameStart" // Game beginning
-  | "illegal"; // Illegal move attempt
+  | 'move' // Regular piece movement
+  | 'capture' // Piece capture
+  | 'check' // King in check
+  | 'checkmate' // Game over - checkmate
+  | 'stalemate' // Game over - stalemate
+  | 'promotion' // Pawn promotion
+  | 'selection' // Piece selection (subtle)
+  | 'gameStart' // Game beginning
+  | 'illegal'; // Illegal move attempt
 
 class AudioManager {
   private audioContext: AudioContext | null = null;
@@ -38,7 +38,7 @@ class AudioManager {
           .webkitAudioContext;
       this.audioContext = new AudioContextClass();
     } catch (error) {
-      console.warn("Web Audio API not supported:", error);
+      console.warn('Web Audio API not supported:', error);
       this.settings.enabled = false;
     }
   }
@@ -47,7 +47,7 @@ class AudioManager {
   private async ensureAudioContext() {
     if (!this.audioContext || !this.settings.enabled) return false;
 
-    if (this.audioContext.state === "suspended") {
+    if (this.audioContext.state === 'suspended') {
       await this.audioContext.resume();
     }
     return true;
@@ -57,7 +57,7 @@ class AudioManager {
   private async playTone(
     frequency: number,
     duration: number,
-    type: OscillatorType = "sine",
+    type: OscillatorType = 'sine',
     volume: number = 1
   ) {
     if (!(await this.ensureAudioContext()) || !this.audioContext) return;
@@ -79,10 +79,15 @@ class AudioManager {
 
     // Set volume envelope (ADSR-like)
     const now = this.audioContext.currentTime;
-    const attack = 0.01;
-    const decay = 0.1;
+    const attack = Math.min(0.01, duration * 0.1);
+    const decay = Math.min(0.1, duration * 0.3);
     const sustain = 0.3;
-    const release = 0.2;
+    const release = Math.min(0.2, duration * 0.4);
+
+    // Ensure envelope phases don't exceed duration
+    const totalEnvelopeTime = attack + decay + release;
+    const sustainTime = Math.max(0, duration - totalEnvelopeTime);
+    const releaseStartTime = now + attack + decay + sustainTime;
 
     gainNode.gain.setValueAtTime(0, now);
     gainNode.gain.linearRampToValueAtTime(
@@ -95,7 +100,7 @@ class AudioManager {
     );
     gainNode.gain.setValueAtTime(
       sustain * volume * this.settings.volume,
-      now + duration - release
+      releaseStartTime
     );
     gainNode.gain.linearRampToValueAtTime(0, now + duration);
 
@@ -108,10 +113,10 @@ class AudioManager {
   private async playChord(
     frequencies: number[],
     duration: number,
-    type: OscillatorType = "sine"
+    type: OscillatorType = 'sine'
   ) {
     const promises = frequencies.map(
-      (freq) => this.playTone(freq, duration, type, 0.3) // Lower volume for each tone in chord
+      freq => this.playTone(freq, duration, type, 0.3) // Lower volume for each tone in chord
     );
     await Promise.all(promises);
   }
@@ -121,61 +126,61 @@ class AudioManager {
     if (!this.settings.enabled) return;
 
     switch (soundType) {
-      case "move":
+      case 'move':
         // Subtle wooden piece movement sound
-        await this.playTone(220, 0.15, "triangle", 0.4);
+        await this.playTone(220, 0.15, 'triangle', 0.4);
         break;
 
-      case "capture":
+      case 'capture':
         // Sharp capture sound with metallic tone
-        await this.playTone(330, 0.08, "square", 0.6);
-        setTimeout(() => this.playTone(220, 0.12, "triangle", 0.4), 50);
+        await this.playTone(330, 0.08, 'square', 0.6);
+        setTimeout(() => this.playTone(220, 0.12, 'triangle', 0.4), 50);
         break;
 
-      case "check":
+      case 'check':
         // Dramatic warning sound
-        await this.playTone(523, 0.2, "sine", 0.7); // High C
-        setTimeout(() => this.playTone(440, 0.3, "sine", 0.5), 100); // A
+        await this.playTone(523, 0.2, 'sine', 0.7); // High C
+        setTimeout(() => this.playTone(440, 0.3, 'sine', 0.5), 100); // A
         break;
 
-      case "checkmate":
+      case 'checkmate':
         // Triumphant/final chord progression
         await this.playChord([262, 330, 392], 0.8); // C major
         setTimeout(() => this.playChord([196, 247, 294], 1.2), 400); // G major (lower)
         break;
 
-      case "stalemate":
+      case 'stalemate':
         // Neutral, inconclusive sound
-        await this.playTone(294, 0.4, "sine", 0.5); // D
-        setTimeout(() => this.playTone(277, 0.6, "sine", 0.4), 200); // C#
+        await this.playTone(294, 0.4, 'sine', 0.5); // D
+        setTimeout(() => this.playTone(277, 0.6, 'sine', 0.4), 200); // C#
         break;
 
-      case "promotion": {
+      case 'promotion': {
         // Ascending triumphant sound
         const promotionNotes = [262, 330, 392, 523]; // C, E, G, C (octave)
         for (let i = 0; i < promotionNotes.length; i++) {
           setTimeout(
-            () => this.playTone(promotionNotes[i], 0.2, "triangle", 0.5),
+            () => this.playTone(promotionNotes[i], 0.2, 'triangle', 0.5),
             i * 100
           );
         }
         break;
       }
 
-      case "selection":
+      case 'selection':
         // Very subtle selection click
-        await this.playTone(880, 0.05, "sine", 0.2);
+        await this.playTone(880, 0.05, 'sine', 0.2);
         break;
 
-      case "gameStart":
+      case 'gameStart':
         // Welcome sound - gentle chord
         await this.playChord([196, 247, 294, 370], 1.0); // G major 7
         break;
 
-      case "illegal":
+      case 'illegal':
         // Error/invalid move sound
-        await this.playTone(150, 0.1, "square", 0.3);
-        setTimeout(() => this.playTone(120, 0.15, "square", 0.3), 80);
+        await this.playTone(150, 0.1, 'square', 0.3);
+        setTimeout(() => this.playTone(120, 0.15, 'square', 0.3), 80);
         break;
 
       default:
@@ -207,15 +212,15 @@ class AudioManager {
   // Test all sounds (useful for debugging)
   async testAllSounds() {
     const sounds: SoundType[] = [
-      "move",
-      "capture",
-      "check",
-      "checkmate",
-      "stalemate",
-      "promotion",
-      "selection",
-      "gameStart",
-      "illegal",
+      'move',
+      'capture',
+      'check',
+      'checkmate',
+      'stalemate',
+      'promotion',
+      'selection',
+      'gameStart',
+      'illegal',
     ];
 
     for (let i = 0; i < sounds.length; i++) {
